@@ -1,0 +1,61 @@
+name: Deploy to VM (Test Branch)
+
+on:
+  push:
+    branches:
+      - test
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Java
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # 3. Build backend (Spring Boot)
+      - name: Build backend
+        working-directory: 02-backend/spring-boot rest api
+        run: ./mvnw clean package -DskipTests
+
+      # 4. Setup Node for frontend
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 5. Build frontend (Angular)
+      - name: Install & Build frontend
+        working-directory: 03-frontend/angular-ecommerce
+        run: |
+          npm install
+          npm run build --prod
+
+      # 6. Deploy to VM via SSH
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            echo "Stopping services..."
+            sudo systemctl stop springboot-app || true
+
+            echo "Deploying backend..."
+            rm -rf /home/azureuser/app/backend/*
+            mkdir -p /home/azureuser/app/backend
+            cp -r ~/deploy/backend/* /home/azureuser/app/backend/
+
+            echo "Starting backend..."
+            sudo systemctl start springboot-app
+
+            echo "Deployment completed"
