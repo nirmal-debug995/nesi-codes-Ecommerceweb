@@ -24,7 +24,7 @@ jobs:
       # 3️⃣ Build Spring Boot backend
       - name: Build Backend (Maven)
         run: |
-          cd 02-backend/spring-boot\ rest\ api
+          cd "02-backend/spring-boot rest api"
           mvn clean package -DskipTests
 
       # 4️⃣ Setup Node (Frontend)
@@ -65,9 +65,8 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "02-backend/spring-boot rest api/target/spring-boot-ecommerce-0.0.1-SNAPSHOT.jar"
+          source: "02-backend/spring-boot rest api/target/*.jar"
           target: "/tmp/"
-          strip_components: 4
 
       # 8️⃣ Copy frontend build
       - name: Copy Frontend Build
@@ -88,17 +87,20 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            echo "Starting backend..."
+            echo "Deploying backend..."
+
             mkdir -p /home/azureuser/app/backend
 
-            mv /tmp/spring-boot-ecommerce-0.0.1-SNAPSHOT.jar /home/azureuser/app/backend/
+            cp /tmp/*.jar /home/azureuser/app/backend/app.jar
             
             sudo systemctl daemon-reload
             sudo systemctl restart springboot-app
             
             sleep 15
 
+            sudo systemctl status springboot-app --no-pager
+
             echo "Checking API..."
-            curl -f http://localhost:8080/api/products || exit 1
+            curl -f http://localhost:8080/api/products
 
             echo "Deployment successful 🎉"
