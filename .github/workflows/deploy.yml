@@ -59,6 +59,7 @@ jobs:
         run: |
           cd 03-frontend/angular-ecommerce
           npm run build
+          ls -R dist
 
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
@@ -126,7 +127,7 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           port: 22
-          source: "dist/*"
+          source: "03-frontend/angular-ecommerce/dist/angular-ecommerce/*"
           target: "/var/www/html"
           overwrite: true
 
