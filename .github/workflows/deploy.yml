@@ -38,7 +38,7 @@ jobs:
         run: |
           cd 03-frontend/angular-ecommerce
           npm install
-          npm run build --configuration production
+          npm run build -- --configuration production
 
       # 6️⃣ Copy files to VM via SSH
       - name: Deploy to VM
