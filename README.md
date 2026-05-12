@@ -50,7 +50,7 @@ This repository contains the code for a E-commerce website built using Angular f
 1. Start the back-end server: Navigate to the root of the project via command line and execute the command `mvn spring-boot:run` or run SpringBootEcommerceApplication class in IntelliJ IDE.
 2. Start the front-end development server: Navigate to the root of the project via command line and execute the command `ng serve` or run the application in Webstorm IDE.
 3. Access the application in a web browser at `http://localhost:4200`.
-4. only for this test branch testing added this line and again for changing the permission.
+4. adding only for this line test branch testing added this line and again for changing the permission.
 ### Entity Relationship Diagram
 
 ![img9](https://github.com/NesiCodes/Fullstack-Ecommerce-Web/assets/89842810/5c3fc1da-45ce-4ae2-a155-f654f91fca9a)
