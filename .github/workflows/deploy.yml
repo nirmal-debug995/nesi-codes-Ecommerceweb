@@ -36,7 +36,7 @@ jobs:
       # 5️⃣ Build Angular frontend
       - name: Build Frontend
         run: |
-          cd 03-frontend
+          cd 03-frontend/angular-ecommerce
           npm install
           npm run build --configuration production
 
