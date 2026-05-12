@@ -3,7 +3,7 @@ name: CI-CD Pipeline
 on:
   push:
     branches:
-      - test   # change later to main for production
+      - test   # change to main later for prod
 
 jobs:
 
@@ -23,7 +23,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Build backend with Maven
+      - name: Build backend
         run: |
           cd "02-backend/spring-boot rest api"
           mvn clean package -DskipTests
@@ -36,7 +36,7 @@ jobs:
 
 
 # =========================
-# 🎨 BUILD FRONTEND
+# 🎨 BUILD FRONTEND (FIXED)
 # =========================
   build-frontend:
     runs-on: ubuntu-latest
@@ -45,44 +45,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
       - name: Install dependencies
         run: |
-          cd frontend
+          cd 03-frontend/angular-ecommerce
           npm install
 
-      - name: Build frontend
+      - name: Build Angular frontend
         run: |
-          cd frontend
+          cd 03-frontend/angular-ecommerce
           npm run build
 
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: frontend/dist
+          path: 03-frontend/angular-ecommerce/dist
 
 
 # =========================
-# 🚀 DEPLOY BACKEND
+# 🚀 DEPLOY BACKEND (FIXED SCP)
 # =========================
   deploy-backend:
     needs: build-backend
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download backend jar
+      - name: Download backend artifact
         uses: actions/download-artifact@v4
         with:
           name: backend-jar
 
-      - name: List files (debug)
-        run: ls -lah
-
+      # STEP 1 — COPY TO FOLDER ONLY (FIXED)
       - name: Copy JAR to VM
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -91,34 +89,37 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           port: 22
           source: "*.jar"
-          target: "/home/azureuser/app/backend/app.jar"
+          target: "/home/azureuser/app/backend/"
           overwrite: true
 
-      - name: Restart backend service
+      # STEP 2 — RENAME + RESTART
+      - name: Deploy backend on server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            echo "Deploying backend..."
+            mv /home/azureuser/app/backend/*.jar /home/azureuser/app/backend/app.jar
             sudo systemctl restart springboot-app
             sudo systemctl status springboot-app --no-pager
 
 
 # =========================
-# 🌐 DEPLOY FRONTEND (NGINX)
+# 🌐 DEPLOY FRONTEND (NGINX FIXED)
 # =========================
   deploy-frontend:
     needs: build-frontend
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download frontend build
+      - name: Download frontend artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
 
-      - name: Copy frontend to VM
+      - name: Copy frontend to VM (Nginx)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_HOST }}
@@ -129,7 +130,7 @@ jobs:
           target: "/var/www/html"
           overwrite: true
 
-      - name: Restart nginx
+      - name: Restart Nginx
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST }}
