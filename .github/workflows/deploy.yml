@@ -65,8 +65,9 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "02-backend/spring-boot rest api/target/*.jar"
+          source: "02-backend/spring-boot rest api/target/spring-boot-ecommerce-0.0.1-SNAPSHOT.jar"
           target: "/home/azureuser/app/backend/"
+          strip_components: 4
 
       # 8️⃣ Copy frontend build
       - name: Copy Frontend Build
