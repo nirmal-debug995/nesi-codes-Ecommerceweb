@@ -37,7 +37,7 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USERNAME }}
+        username: ${{ secrets.VM_USER }}
         key: ${{ secrets.VM_SSH_KEY }}
         source: "02-backend/spring-boot rest api/target/spring-boot-ecommerce-0.0.1-SNAPSHOT.jar"
         target: "/tmp/app.jar"
@@ -47,7 +47,7 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USERNAME }}
+        username: ${{ secrets.VM_USER }}
         key: ${{ secrets.VM_SSH_KEY }}
         script: |
           sudo systemctl stop springboot-app || true
@@ -91,7 +91,7 @@ jobs:
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USERNAME }}
+        username: ${{ secrets.VM_USER }}
         key: ${{ secrets.VM_SSH_KEY }}
         source: "03-frontend/angular-ecommerce/dist/angular-ecommerce/*"
         target: "/tmp/frontend"
@@ -101,7 +101,7 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USERNAME }}
+        username: ${{ secrets.VM_USER }}
         key: ${{ secrets.VM_SSH_KEY }}
         script: |
           sudo rm -rf /var/www/html/*
