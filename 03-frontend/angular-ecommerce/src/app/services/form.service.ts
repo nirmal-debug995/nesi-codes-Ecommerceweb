@@ -10,8 +10,8 @@ import {State} from "../common/state";
 })
 export class FormService {
 
-  private countriesUrl = "http://localhost:8080/api/countries";
-  private statesUrl = "http://localhost:8080/api/states";
+  private countriesUrl = "http://98.70.45.172:8080/api/countries";
+  private statesUrl = "http://98.70.45.172:8080/api/states";
 
   constructor(private httpClient: HttpClient) { }
 
