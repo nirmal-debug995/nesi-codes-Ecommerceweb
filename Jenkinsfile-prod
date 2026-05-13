@@ -1,0 +1,133 @@
+pipeline {
+    agent any
+
+    environment {
+
+        // Azure Container Registry
+        ACR_NAME = "ecommerceacrprod"
+        ACR_LOGIN_SERVER = "ecommerceacrprod.azurecr.io"
+
+        // Docker image names
+        BACKEND_IMAGE = "ecommerce-backend"
+        FRONTEND_IMAGE = "ecommerce-frontend"
+
+        // Project directories
+        BACKEND_DIR = "02-backend/spring-boot rest api"
+        FRONTEND_DIR = "03-frontend/angular-ecommerce"
+    }
+
+    stages {
+
+        // =========================
+        // Checkout Code
+        // =========================
+        stage('Checkout PROD Branch') {
+            steps {
+                git branch: 'prod',
+                url: 'https://github.com/nirmal-debug995/nesi-codes-Ecommerce-Web.git'
+            }
+        }
+
+        // =========================
+        // Build Backend
+        // =========================
+        stage('Build Backend') {
+            steps {
+                dir("${BACKEND_DIR}") {
+                    sh 'mvn clean package -DskipTests'
+                }
+            }
+        }
+
+        // =========================
+        // Build Frontend
+        // =========================
+        stage('Build Frontend') {
+            steps {
+                dir("${FRONTEND_DIR}") {
+                    sh 'npm install'
+                    sh 'npm run build -- --configuration production'
+                }
+            }
+        }
+
+        // =========================
+        // Build Backend Docker Image
+        // =========================
+        stage('Build Backend Docker Image') {
+            steps {
+                sh """
+                docker build \
+                -t ${ACR_LOGIN_SERVER}/${BACKEND_IMAGE}:latest \
+                "${BACKEND_DIR}"
+                """
+            }
+        }
+
+        // =========================
+        // Build Frontend Docker Image
+        // =========================
+        stage('Build Frontend Docker Image') {
+            steps {
+                sh """
+                docker build \
+                -t ${ACR_LOGIN_SERVER}/${FRONTEND_IMAGE}:latest \
+                "${FRONTEND_DIR}"
+                """
+            }
+        }
+
+        // =========================
+        // Azure Login
+        // =========================
+        stage('Login to Azure Container Registry') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'acr-credentials',
+                    usernameVariable: 'ACR_USERNAME',
+                    passwordVariable: 'ACR_PASSWORD'
+                )]) {
+
+                    sh """
+                    docker login ${ACR_LOGIN_SERVER} \
+                    -u ${ACR_USERNAME} \
+                    -p ${ACR_PASSWORD}
+                    """
+                }
+            }
+        }
+
+        // =========================
+        // Push Backend Image
+        // =========================
+        stage('Push Backend Image') {
+            steps {
+                sh """
+                docker push ${ACR_LOGIN_SERVER}/${BACKEND_IMAGE}:latest
+                """
+            }
+        }
+
+        // =========================
+        // Push Frontend Image
+        // =========================
+        stage('Push Frontend Image') {
+            steps {
+                sh """
+                docker push ${ACR_LOGIN_SERVER}/${FRONTEND_IMAGE}:latest
+                """
+            }
+        }
+    }
+
+    post {
+
+        success {
+            echo 'PROD Images Successfully Pushed to ACR!'
+        }
+
+        failure {
+            echo 'PROD Pipeline Failed!'
+        }
+    }
+}
