@@ -18,8 +18,7 @@ pipeline {
         // =========================
         stage('Checkout Code') {
             steps {
-                git branch: 'uat',
-                url: 'https://github.com/nirmal-debug995/nesi-codes-Ecommerceweb.git'
+                git url: 'https://github.com/nirmal-debug995/nesi-codes-Ecommerceweb.git', branch: 'uat'
             }
         }
 
@@ -75,7 +74,7 @@ pipeline {
         }
 
         // =========================
-        // Deploy Frontend
+        // Deploy Frontend (FIXED)
         // =========================
         stage('Deploy Frontend') {
             steps {
@@ -83,7 +82,7 @@ pipeline {
                 sudo rm -rf ${FRONTEND_DEPLOY_PATH}/*
 
                 sudo cp -r \
-                "${WORKSPACE}/${FRONTEND_DIR}/dist/angular-ecommerce/browser/"* \
+                "${WORKSPACE}/${FRONTEND_DIR}/dist/angular-ecommerce/"* \
                 ${FRONTEND_DEPLOY_PATH}/
 
                 sudo systemctl restart nginx
