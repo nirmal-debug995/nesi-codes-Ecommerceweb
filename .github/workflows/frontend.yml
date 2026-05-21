@@ -1,0 +1,60 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '03-frontend/**'
+      - '.github/workflows/frontend.yml'
+
+env:
+  ACR_NAME: ecommerceacrprod
+  IMAGE_NAME: ecommerce-frontend
+  RESOURCE_GROUP: ecommerce-rg
+  AKS_CLUSTER_NAME: ecommerce-aks
+  NAMESPACE: ecommerce
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Login to Azure Container Registry
+      run: |
+        az acr login --name $ACR_NAME
+
+    - name: Build Docker Image
+      run: |
+        docker build -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }} \
+        ./03-frontend/angular-ecommerce
+
+    - name: Push Docker Image
+      run: |
+        docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }}
+
+    - name: Set AKS Context
+      uses: azure/aks-set-context@v4
+      with:
+        resource-group: ${{ env.RESOURCE_GROUP }}
+        cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+
+    - name: Deploy to AKS
+      run: |
+        kubectl set image deployment/ecommerce-frontend \
+        frontend=$ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }} \
+        -n $NAMESPACE
+
+        kubectl rollout status deployment/ecommerce-frontend -n $NAMESPACE
