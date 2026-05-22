@@ -14,7 +14,7 @@ spec:
         app: frontend
     spec:
       containers:
-      - name: frontend
+      - name: ecommerce-frontend
         image: placeholder
         ports:
         - containerPort: 80

@@ -14,7 +14,7 @@ spec:
         app: backend
     spec:
       containers:
-      - name: backend
+      - name: ecommerce-backend
         image: placeholder
         ports:
         - containerPort: 8080
