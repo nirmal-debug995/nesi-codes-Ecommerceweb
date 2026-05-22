@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: ecommerceacrprod.azurecr.io/ecommerce-backend:latest
+        image: placeholder
         ports:
         - containerPort: 8080
         env:
