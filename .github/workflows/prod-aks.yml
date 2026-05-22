@@ -102,6 +102,10 @@ jobs:
         resource-group: ${{ secrets.RESOURCE_GROUP }}
         cluster-name: ${{ secrets.AKS_NAME }}
 
+    - name: Ensure Namespace Exists
+      run: |
+        kubectl create namespace ecommerce --dry-run=client -o yaml | kubectl apply -f -
+
     # -------------------------
     # STEP 12: Deploy to AKS
     # -------------------------
