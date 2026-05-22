@@ -1,4 +1,3 @@
-# ---------- BUILD STAGE ----------
 FROM node:18 AS build
 
 WORKDIR /app
@@ -11,15 +10,12 @@ COPY . .
 RUN npm run build -- --configuration production
 
 
-# ---------- RUN STAGE (NGINX) ----------
 FROM nginx:alpine
 
-# copy Angular build
+# Copy Angular build output
 COPY --from=build /app/dist/angular-ecommerce /usr/share/nginx/html
 
-# 🔥 copy custom nginx config (IMPORTANT FIX)
+# 🔥 IMPORTANT: overwrite default nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
