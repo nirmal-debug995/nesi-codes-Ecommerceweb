@@ -1,7 +1,8 @@
 name: Full Stack CI/CD
 
 on:
-  push:
+  workflow_dispatch:
+    push:
     branches:
       - test
 

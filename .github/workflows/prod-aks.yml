@@ -1,9 +1,10 @@
 name: AKS Production Deployment Pipeline
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - prod
+      - 
 
 env:
   ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}

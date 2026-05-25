@@ -1,12 +1,13 @@
 name: Frontend CI/CD to AKS
 
 on:
-  push:
-    branches:
-      - prod
-    paths:
-      - '03-frontend/**'
-      - '.github/workflows/frontend.yml'
+  workflow_dispatch:
+    push:
+      branches:
+        - 
+      paths:
+        - '03-frontend/**'
+        - '.github/workflows/frontend.yml'
 
 permissions:
   contents: read
