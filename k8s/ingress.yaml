@@ -4,23 +4,12 @@ metadata:
   name: ecommerce-ingress
   namespace: ecommerce
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   ingressClassName: nginx
-
   rules:
   - http:
       paths:
-
-      # Frontend
-      - path: /(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: frontend-service
-            port:
-              number: 80
 
       # Backend API
       - path: /api(/|$)(.*)
@@ -30,3 +19,12 @@ spec:
             name: backend-service
             port:
               number: 8080
+
+      # Frontend (IMPORTANT: must be last)
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
