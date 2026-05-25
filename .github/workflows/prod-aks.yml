@@ -113,14 +113,6 @@ jobs:
       run: |
         kubectl apply -f k8s/
 
-        kubectl set image deployment/ecommerce-backend \
-          ecommerce-backend=$ACR_LOGIN_SERVER/ecommerce-backend:${{ github.sha }} \
-          -n ecommerce
-
-        kubectl set image deployment/ecommerce-frontend \
-          ecommerce-frontend=$ACR_LOGIN_SERVER/ecommerce-frontend:${{ github.sha }} \
-          -n ecommerce
-
         kubectl rollout status deployment/ecommerce-backend -n ecommerce
         kubectl rollout status deployment/ecommerce-frontend -n ecommerce
 

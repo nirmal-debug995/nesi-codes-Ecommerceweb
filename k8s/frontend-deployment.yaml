@@ -15,6 +15,7 @@ spec:
     spec:
       containers:
       - name: ecommerce-frontend
-        image: placeholder
+        image: ecommerceacrprod.azurecr.io/ecommerce-frontend:8bcea7d82ee6732c9d8e74590482950e105819b1
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
