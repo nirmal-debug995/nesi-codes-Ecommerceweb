@@ -14,9 +14,8 @@ spec:
         app: backend
     spec:
       containers:
-      - name: ecommerce-backend
-        image: ecommerceacrprod.azurecr.io/ecommerce-backend:IMAGE_TAG
-        imagePullPolicy: Always
+      - name: backend
+        image: ecommerceacrprod.azurecr.io/ecommerce-backend:latest
         ports:
         - containerPort: 8080
         env:

@@ -2,6 +2,7 @@ name: Ecommerce AKS CI-CD Pipeline
 
 on:
   push:
+    workflow_dispatch:  
     branches:
       - prod
 

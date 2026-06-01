@@ -14,8 +14,7 @@ spec:
         app: frontend
     spec:
       containers:
-      - name: ecommerce-frontend
-        image: ecommerceacrprod.azurecr.io/ecommerce-frontend:IMAGE_TAG
-        imagePullPolicy: Always
+      - name: frontend
+        image: ecommerceacrprod.azurecr.io/ecommerce-frontend:latest
         ports:
         - containerPort: 80
