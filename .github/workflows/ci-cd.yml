@@ -1,11 +1,3 @@
-name: Ecommerce AKS CI-CD Pipeline
-
-on:
-  push:
-    workflow_dispatch:  
-    branches:
-      - prod
-
 env:
   ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
   RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}

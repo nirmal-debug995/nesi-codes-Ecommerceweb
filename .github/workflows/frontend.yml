@@ -1,16 +1,3 @@
-name: Frontend CI/CD to AKS
-
-on:
-  workflow_dispatch:
-    push:
-      branches:
-        - 
-      paths:
-        - '03-frontend/**'
-        - '.github/workflows/frontend.yml'
-
-permissions:
-  contents: read
 
 env:
   ACR_NAME: ecommerceacrprod
