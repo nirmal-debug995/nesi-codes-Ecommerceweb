@@ -2,102 +2,74 @@ pipeline {
     agent any
 
     environment {
-        BACKEND_DIR = "02-backend/spring-boot rest api"
-        FRONTEND_DIR = "03-frontend/angular-ecommerce"
-
-        JAR_NAME = "spring-boot-ecommerce-0.0.1-SNAPSHOT.jar"
-
-        BACKEND_DEPLOY_PATH = "/home/azureuser/app/backend"
-        FRONTEND_DEPLOY_PATH = "/var/www/html"
+        ACR = "ecommerceacrprod.azurecr.io"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        RESOURCE_GROUP = "ecommerce-aks-rg"
+        AKS_CLUSTER = "ecommerce-aks"
     }
 
     stages {
 
-        // =========================
-        // Checkout
-        // =========================
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git url: 'https://github.com/nirmal-debug995/nesi-codes-Ecommerceweb.git', branch: 'uat'
+                checkout scm
             }
         }
 
-        // =========================
-        // Backend Build
-        // =========================
-        stage('Build Backend') {
+        stage('Azure Login') {
             steps {
-                dir("${BACKEND_DIR}") {
-                    sh 'mvn clean package -DskipTests'
+                withCredentials([string(credentialsId: 'azure-sp', variable: 'AZURE_CRED')]) {
+                    sh '''
+                        echo $AZURE_CRED > azure.json
+                        az login --service-principal --username <appId> --password <password> --tenant <tenantId>
+                    '''
                 }
             }
         }
 
-        // =========================
-        // Deploy Backend
-        // =========================
-        stage('Deploy Backend') {
+        stage('ACR Login') {
             steps {
-                sh """
-                sudo systemctl stop springboot-app || true
-
-                sudo cp "${WORKSPACE}/${BACKEND_DIR}/target/${JAR_NAME}" \
-                "${BACKEND_DEPLOY_PATH}/app.jar"
-
-                sudo systemctl start springboot-app
-
-                sudo systemctl status springboot-app --no-pager
-                """
+                sh "az acr login --name ecommerceacrprod"
             }
         }
 
-        // =========================
-        // Frontend Install
-        // =========================
-        stage('Install Frontend Dependencies') {
+        stage('Build Backend Image') {
             steps {
-                dir("${FRONTEND_DIR}") {
-                    sh 'npm install'
-                }
+                sh '''
+                    docker build -t $ACR/ecommerce-backend:$IMAGE_TAG ./02-backend/spring-boot\ rest\ api
+                '''
             }
         }
 
-        // =========================
-        // Frontend Build
-        // =========================
-        stage('Build Frontend') {
+        stage('Build Frontend Image') {
             steps {
-                dir("${FRONTEND_DIR}") {
-                    sh 'npm run build -- --configuration production'
-                }
+                sh '''
+                    docker build -t $ACR/ecommerce-frontend:$IMAGE_TAG ./03-frontend/angular-ecommerce
+                '''
             }
         }
 
-        // =========================
-        // Deploy Frontend (FIXED)
-        // =========================
-        stage('Deploy Frontend') {
+        stage('Push Images') {
             steps {
-                sh """
-                sudo rm -rf ${FRONTEND_DEPLOY_PATH}/*
-
-                sudo cp -r \
-                "${WORKSPACE}/${FRONTEND_DIR}/dist/angular-ecommerce/"* \
-                ${FRONTEND_DEPLOY_PATH}/
-
-                sudo systemctl restart nginx
-                """
+                sh '''
+                    docker push $ACR/ecommerce-backend:$IMAGE_TAG
+                    docker push $ACR/ecommerce-frontend:$IMAGE_TAG
+                '''
             }
         }
-    }
 
-    post {
-        success {
-            echo 'UAT Deployment Successful!'
-        }
+        stage('Deploy to AKS') {
+            steps {
+                sh '''
+                    az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER --overwrite-existing
 
-        failure {
-            echo 'Deployment Failed!'
+                    kubectl set image deployment/ecommerce-backend backend=$ACR/ecommerce-backend:$IMAGE_TAG -n ecommerce
+                    kubectl set image deployment/ecommerce-frontend frontend=$ACR/ecommerce-frontend:$IMAGE_TAG -n ecommerce
+
+                    kubectl rollout status deployment/ecommerce-backend -n ecommerce
+                    kubectl rollout status deployment/ecommerce-frontend -n ecommerce
+                '''
+            }
         }
     }
 }
