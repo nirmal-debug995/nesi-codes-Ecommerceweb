@@ -7,8 +7,11 @@ on:
 
 env:
   ACR_NAME: ecommerceacrprod
+  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
   RESOURCE_GROUP: ecommerce-aks-rg
   AKS_CLUSTER: ecommerce-aks
+  NAMESPACE: ecommerce
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
 
@@ -30,28 +33,37 @@ jobs:
       run: |
         az acr login --name $ACR_NAME
 
+    # ==========================
+    # BUILD BACKEND
+    # ==========================
     - name: Build Backend Image
       run: |
         docker build \
-        -t $ACR_NAME.azurecr.io/ecommerce-backend:${{ github.sha }} \
-        ./02-backend
+          -t $ACR_LOGIN_SERVER/ecommerce-backend:$IMAGE_TAG \
+          "02-backend/spring-boot rest api"
 
     - name: Push Backend Image
       run: |
         docker push \
-        $ACR_NAME.azurecr.io/ecommerce-backend:${{ github.sha }}
+          $ACR_LOGIN_SERVER/ecommerce-backend:$IMAGE_TAG
 
+    # ==========================
+    # BUILD FRONTEND
+    # ==========================
     - name: Build Frontend Image
       run: |
         docker build \
-        -t $ACR_NAME.azurecr.io/ecommerce-frontend:${{ github.sha }} \
-        ./03-frontend
+          -t $ACR_LOGIN_SERVER/ecommerce-frontend:$IMAGE_TAG \
+          "03-frontend/angular-ecommerce"
 
     - name: Push Frontend Image
       run: |
         docker push \
-        $ACR_NAME.azurecr.io/ecommerce-frontend:${{ github.sha }}
+          $ACR_LOGIN_SERVER/ecommerce-frontend:$IMAGE_TAG
 
+    # ==========================
+    # CONNECT TO AKS
+    # ==========================
     - name: Get AKS Credentials
       run: |
         az aks get-credentials \
@@ -59,19 +71,41 @@ jobs:
           --name $AKS_CLUSTER \
           --overwrite-existing
 
+    # ==========================
+    # DEPLOY BACKEND
+    # ==========================
     - name: Update Backend Image
       run: |
         kubectl set image deployment/ecommerce-backend \
-        backend=$ACR_NAME.azurecr.io/ecommerce-backend:${{ github.sha }} \
-        -n ecommerce
+          backend=$ACR_LOGIN_SERVER/ecommerce-backend:$IMAGE_TAG \
+          -n $NAMESPACE
 
+    # ==========================
+    # DEPLOY FRONTEND
+    # ==========================
     - name: Update Frontend Image
       run: |
         kubectl set image deployment/ecommerce-frontend \
-        frontend=$ACR_NAME.azurecr.io/ecommerce-frontend:${{ github.sha }} \
-        -n ecommerce
+          frontend=$ACR_LOGIN_SERVER/ecommerce-frontend:$IMAGE_TAG \
+          -n $NAMESPACE
 
-    - name: Verify Rollout
+    # ==========================
+    # VERIFY DEPLOYMENT
+    # ==========================
+    - name: Verify Backend Rollout
       run: |
-        kubectl rollout status deployment/ecommerce-backend -n ecommerce
-        kubectl rollout status deployment/ecommerce-frontend -n ecommerce
+        kubectl rollout status deployment/ecommerce-backend \
+          -n $NAMESPACE --timeout=300s
+
+    - name: Verify Frontend Rollout
+      run: |
+        kubectl rollout status deployment/ecommerce-frontend \
+          -n $NAMESPACE --timeout=300s
+
+    - name: Verify Pods
+      run: |
+        kubectl get pods -n $NAMESPACE
+
+    - name: Verify Services
+      run: |
+        kubectl get svc -n $NAMESPACE
